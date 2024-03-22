@@ -33,13 +33,13 @@ const createCustomer = async(name) => {
     const SQL = /*SQL*/ `INSERT INTO customer(id, name) VALUES($1, $2) RETURNING *;`;
 
     const response = await client.query(SQL, [uuid.v4(), name]);
-    return response.rows;
+    return response.rows[0];
 };
 
 const createRestaurant = async(name) => {
     const SQL = /*SQL*/ `INSERT INTO restaurant(id, name) VALUES($1, $2) RETURNING *;`;
     const response = await client.query(SQL, [uuid.v4(), name]);
-    return response.rows;
+    return response.rows[0];
 };
 
 const fetchCustomer = async() => {
@@ -60,7 +60,7 @@ const fetchReservation = async() => {
     const SQL = /*SQL*/ `SELECT * FROM reservation`;
     const response = await client.query(SQL);
     return response.rows;
-}
+};
 
 const createReservation = async({ customer_id, restaurant_id, date })=> {
     const SQL = /*sql*/ `
@@ -69,8 +69,13 @@ const createReservation = async({ customer_id, restaurant_id, date })=> {
         RETURNING *
     `;
     const response = await client.query(SQL, [uuid.v4(), customer_id, restaurant_id, date]);
-    return response.rows;
-}
+    return response.rows[0];
+};
+
+const destroyReservation = async ({ id, customer_id }) => {
+        const SQL = /*SQL*/ `DELETE FROM reservation WHERE id = $1 AND customer_id = $2;`;
+        const result = await client.query(SQL, [id, customer_id]);
+};
 
 const seed = async () => {
     const brett = await createCustomer('Brett');
@@ -83,25 +88,25 @@ const seed = async () => {
 
     const [reservation1, reservation2] = await Promise.all([
         createReservation({
-            customer_id: brett[0].id,
-            restaurant_id: pizza_hut[0].id,
+            customer_id: brett.id,
+            restaurant_id: pizza_hut.id,
             date: '2024-03-21'
         }),
         createReservation({
-            customer_id: meagan[0].id,
-            restaurant_id: taco_bell[0].id,
+            customer_id: meagan.id,
+            restaurant_id: taco_bell.id,
             date: '2024-03-12'
         })
     ]);
-
-    console.log(await fetchReservation());
+    
 };
 
 module.exports = {
     client,
     createTables,
-    createCustomer,
+    fetchCustomer,
+    fetchRestaurant,
+    fetchReservation,
     createReservation,
-    createRestaurant,
     seed
 }
